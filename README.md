@@ -78,3 +78,19 @@ bb prove -v -b "./target/recurse.json" -w "./target/recurse.gz" -o ./proof --rec
 bb write_vk -v -b "./target/recurse.json" -o ./proof --honk_recursion 1
 bb verify -k ./proof/vk -p ./proof/proof
 ```
+
+## javascript
+
+In JS you can use the [prove.js](./prove.js) script.
+
+The @aztec/bb packages is missing a few options, so we need to adapt for now.
+
+### VK
+
+The verifying key is not generated properly for now, so it needs to be generated in advance with `bb` and imported in the script.  
+It's fixed for a circuit, so it doesn't change based on user inputs
+
+### Proof
+
+There's a function `generateProofForRecursiveAggregation` but it doesn't return the proof, only the proof formatted as fields so we can't verify it.  
+For that reason, I compute the fields myself with `proofToFields` and from the publicInputs returned by `generateProof`

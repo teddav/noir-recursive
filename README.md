@@ -2,11 +2,11 @@
 
 ## bb
 
-This was last tested with `bb` 0.82.0.  
+This was last tested with `bb` 0.84.0.  
 To install this version:
 
 ```bash
-bbup -v 0.82.0
+bbup -v 0.84.0
 ```
 
 ## "child" circuits
@@ -27,7 +27,7 @@ bb prove -v -s ultra_honk -b "./target/circuit_1.json" -w "./target/circuit_1.gz
 # generate VK
 bb write_vk -v -s ultra_honk -b "./target/circuit_1.json" -o ./proof --output_format bytes_and_fields --honk_recursion 1 --init_kzg_accumulator
 
-bb verify -s ultra_honk -k ./proof/vk -p ./proof/proof
+bb verify -s ultra_honk -k ./proof/vk -p ./proof/proof -i ./proof/public_inputs
 ```
 
 In the `proof` directory, the files that are important for us:
@@ -35,9 +35,10 @@ In the `proof` directory, the files that are important for us:
 - proof_fields.json -> should be an array of 456 values + the number of public inputs
 - vk_fields.json -> should be an array of 128 values
 
-### remove public inputs
+### remove public inputs (bb < 0.84)
 
 > [!WARNING]
+> in older versions of `bb`
 > You need to remove the public inputs from proof_fields.json
 
 The first value in the proof_fields array should be the public input.  
@@ -76,7 +77,7 @@ nargo execute
 
 bb prove -v -b "./target/recurse.json" -w "./target/recurse.gz" -o ./proof --recursive
 bb write_vk -v -b "./target/recurse.json" -o ./proof --honk_recursion 1
-bb verify -k ./proof/vk -p ./proof/proof
+bb verify -k ./proof/vk -p ./proof/proof -i ./proof/public_inputs
 ```
 
 ## javascript

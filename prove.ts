@@ -1,4 +1,4 @@
-import { Barretenberg, RawBuffer, UltraHonkBackend } from "@aztec/bb.js";
+import { Barretenberg, deflattenFields, RawBuffer, UltraHonkBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
 import type { CompiledCircuit } from "@noir-lang/noir_js";
 import { assert } from "console";
@@ -28,7 +28,8 @@ async function prove_UltraHonk() {
   const { witness } = await noir.execute(data);
 
   console.time("prove");
-  const { proof: proofAsFields, publicInputs } = await backend.generateProofForRecursiveAggregation(witness);
+  const { proof, publicInputs } = await backend.generateProof(witness);
+  const proofAsFields = deflattenFields(proof);
   assert(proofAsFields.length === 456);
   console.timeEnd("prove");
 
@@ -36,7 +37,7 @@ async function prove_UltraHonk() {
   const verificationKey = await backend.getVerificationKey();
   const _vkAsFields = await barrentenbergApi.acirVkAsFieldsUltraHonk(new RawBuffer(verificationKey));
   let vkAsFields = _vkAsFields.map((f) => f.toString());
-  assert(vkAsFields.length === 128);
+  console.log("VK size:", vkAsFields.length);
 
   // Recursive circuit
   const noir_recursive = new Noir(CIRCUITS.recurse);

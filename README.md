@@ -2,11 +2,11 @@
 
 ## bb / nargo
 
-This was last tested with `bb` 0.84.0, and `nargo` 1.0.0-beta.8  
+This was last tested with `bb` 1.1.3, and `nargo` 1.0.0-beta.8  
 To install these versions:
 
 ```bash
-bbup -v 0.84.0
+bbup -v 1.1.3
 noirup -v 1.0.0-beta.8
 ```
 
@@ -18,6 +18,16 @@ You only need to compile the circuits, and run `prove.ts`:
 bash compile.sh
 npm start
 ```
+
+## VK size
+
+> [!WARNING]
+> depending on the `bb` version used, the VK length is different
+
+in bb 0.84, the verification key's length is 128.  
+when updating to 1.1.3, the verification key's length is 112.
+
+Make sure to input the appropriate value in `HONK_VK_SIZE` in [./recurse/src/main.nr](./recurse/src/main.nr)
 
 ## Running manually
 

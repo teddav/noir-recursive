@@ -95,3 +95,11 @@ It's fixed for a circuit, so it doesn't change based on user inputs
 
 There's a function `generateProofForRecursiveAggregation` but it doesn't return the proof, only the proof formatted as fields so we can't verify it.  
 For that reason, I compute the fields myself with `proofToFields` and from the publicInputs returned by `generateProof`
+
+```js
+// const { execSync } = require("child_process");
+// execSync("nargo execute --package circuit_1");
+// execSync("nargo compile --package recurse");
+// execSync("bb prove -b ./circuit_1/target/circuit_1.json -w ./circuit_1/target/circuit_1.gz -o ./circuit_1/proof --recursive --honk_recursion 1 --output_format fields");
+// execSync("bb write_vk -b ./circuit_1/target/circuit_1.json -o ./circuit_1/proof --init_kzg_accumulator --honk_recursion 1 --output_format fields");
+```

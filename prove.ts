@@ -12,54 +12,87 @@ function loadFileAsJson(path: string) {
 
 function loadCircuits(): Record<string, CompiledCircuit> {
   return {
-    circuit_1: loadFileAsJson("./circuit_1/target/circuit_1.json"),
-    recurse: loadFileAsJson("./recurse/target/recurse.json"),
+    child: loadFileAsJson("./child/target/child.json"),
+    parent1: loadFileAsJson("./parent1/target/parent1.json"),
+    parent2: loadFileAsJson("./parent2/target/parent2.json"),
   };
 }
 
 const CIRCUITS = loadCircuits();
 
-async function prove_UltraHonk() {
-  const noir = new Noir(CIRCUITS.circuit_1);
-  const backend = new UltraHonkBackend(CIRCUITS.circuit_1.bytecode, { threads: os.cpus().length }, { recursive: true });
+type Witness = Uint8Array<ArrayBufferLike>;
 
-  const data = { a: 3, b: 4, c: 12 };
-
+async function executeCircuit(
+  circuit: CompiledCircuit,
+  data: Record<string, any>
+): Promise<{ witness: Witness; backend: UltraHonkBackend; verificationKey: string[] }> {
+  const noir = new Noir(circuit);
   const { witness } = await noir.execute(data);
 
-  console.time("prove");
-  const { proof, publicInputs } = await backend.generateProof(witness);
-  const proofAsFields = deflattenFields(proof);
-  assert(proofAsFields.length === 456);
-  console.timeEnd("prove");
+  const backend = new UltraHonkBackend(circuit.bytecode, { threads: os.cpus().length }, { recursive: true });
 
   const barrentenbergApi = await Barretenberg.new({ threads: os.cpus().length });
   const verificationKey = await backend.getVerificationKey();
   const _vkAsFields = await barrentenbergApi.acirVkAsFieldsUltraHonk(new RawBuffer(verificationKey));
-  let vkAsFields = _vkAsFields.map((f) => f.toString());
-  console.log("VK size:", vkAsFields.length);
+  const vkAsFields = _vkAsFields.map((f) => f.toString());
 
-  // Recursive circuit
-  const noir_recursive = new Noir(CIRCUITS.recurse);
-  const backend_recursive = new UltraHonkBackend(CIRCUITS.recurse.bytecode, { threads: os.cpus().length }, { recursive: true });
-
-  const recursiveInputs = {
-    verification_key: vkAsFields,
-    proof: proofAsFields,
-    public_inputs: publicInputs,
-  };
-
-  console.time("execute_recursive");
-  const { witness: witness_recursive } = await noir_recursive.execute(recursiveInputs);
-  console.timeEnd("execute_recursive");
-
-  console.time("prove_recursive");
-  const proof_recursive = await backend_recursive.generateProof(witness_recursive);
-  console.timeEnd("prove_recursive");
-
-  const verified = await backend_recursive.verifyProof(proof_recursive);
-  assert(verified);
-  console.log("verified", verified);
+  return { witness, backend, verificationKey: vkAsFields };
 }
 
-prove_UltraHonk();
+async function main() {
+  const {
+    witness: witness_child,
+    backend: backend_child,
+    verificationKey: vkAsFields_child,
+  } = await executeCircuit(CIRCUITS.child, { a: 3, b: 4, c: 12 });
+
+  console.time("prove child");
+  const proof_child = await backend_child.generateProof(witness_child);
+  const proofAsFields_child = deflattenFields(proof_child.proof);
+  assert(proofAsFields_child.length === 456);
+  console.timeEnd("prove child");
+  console.log("Child public inputs:", proof_child.publicInputs);
+
+  // Recursive circuit 1
+  const {
+    witness: witness_recursive1,
+    backend: backend_recursive1,
+    verificationKey: vkAsFieldsRecursive1,
+  } = await executeCircuit(CIRCUITS.parent1, {
+    verification_key: vkAsFields_child,
+    proof: proofAsFields_child,
+    public_inputs: proof_child.publicInputs,
+    random_value: 11,
+  });
+
+  console.time("prove recursive 1");
+  const proof_recursive1 = await backend_recursive1.generateProof(witness_recursive1);
+  const proofAsFields_recursive1 = deflattenFields(proof_recursive1.proof);
+  assert(proofAsFields_recursive1.length === 456);
+  console.timeEnd("prove recursive 1");
+  console.log("Parent 1 public inputs:", proof_recursive1.publicInputs);
+
+  const verified_recursive1 = await backend_recursive1.verifyProof(proof_recursive1);
+  assert(verified_recursive1);
+
+  // Recursive circuit 2
+  const {
+    witness: witness_recursive2,
+    backend: backend_recursive2,
+    verificationKey: vkAsFieldsRecursive2,
+  } = await executeCircuit(CIRCUITS.parent2, {
+    verification_key: vkAsFieldsRecursive1,
+    proof: proofAsFields_recursive1,
+    public_inputs: proof_recursive1.publicInputs,
+  });
+
+  console.time("prove recursive 2");
+  const proof_recursive2 = await backend_recursive2.generateProof(witness_recursive2);
+  console.timeEnd("prove recursive 2");
+  console.log("Parent 2 public inputs:", proof_recursive2.publicInputs);
+
+  const verified2 = await backend_recursive2.verifyProof(proof_recursive2);
+  assert(verified2);
+}
+
+main();

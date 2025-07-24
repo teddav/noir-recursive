@@ -1,0 +1,4 @@
+[package]
+name = "parent2"
+type = "bin"
+authors = ["teddav"]

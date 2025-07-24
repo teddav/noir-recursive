@@ -1,4 +1,4 @@
 [package]
-name = "recurse"
+name = "child"
 type = "bin"
 authors = ["teddav"]

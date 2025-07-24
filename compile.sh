@@ -1,7 +1,8 @@
 #! /bin/bash
 
-cd circuit_1
+cd child
 nargo compile
-cd ../recurse
+cd ../parent1
 nargo compile
-cd ..
+cd ../parent2
+nargo compile

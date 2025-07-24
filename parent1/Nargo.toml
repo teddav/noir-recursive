@@ -1,4 +1,4 @@
 [package]
-name = "circuit_1"
+name = "parent1"
 type = "bin"
 authors = ["teddav"]

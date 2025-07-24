@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node index.ts"
+    "start": "ts-node prove.ts"
   },
   "dependencies": {
     "@aztec/bb.js": "0.84.0",

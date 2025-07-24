@@ -1,19 +1,34 @@
 # Recursive circuit in Noir
 
-## bb
+## bb / nargo
 
-This was last tested with `bb` 0.84.0.  
-To install this version:
+This was last tested with `bb` 0.84.0, and `nargo` 1.0.0-beta.8  
+To install these versions:
 
 ```bash
 bbup -v 0.84.0
+noirup -v 1.0.0-beta.8
 ```
 
-## "child" circuits
+## Run
+
+You only need to compile the circuits, and run `prove.ts`:
+
+```bash
+bash compile.sh
+npm start
+```
+
+## Running manually
+
+If you don't like my `prove.ts` script and want to run things with the CLI using `bb`, here's some help
+
+### "child" circuits
 
 First build and prove the circuits that are going to be "recursed".
 
-We can manually parse the proof and convert into an array of 32 bytes field elements, but there's an option in `bb` to do it automatically: `output_format`
+The proof needs to be in a specific format (an array of 32 bytes field elements).  
+`bb` has an option to do it automatically: `--output_format`
 
 ```bash
 cd circuit_1 && mkdir proof
@@ -35,7 +50,7 @@ In the `proof` directory, the files that are important for us:
 - proof_fields.json -> should be an array of 456 values + the number of public inputs
 - vk_fields.json -> should be an array of 128 values
 
-### remove public inputs (bb < 0.84)
+#### remove public inputs (bb < 0.84)
 
 > [!WARNING]
 > in older versions of `bb`
@@ -49,9 +64,8 @@ In the end, proof_fields's length must be 456.
 
 _You'll actually need to copy the public inputs to the recursive circuit_
 
-#### circuit_1 example
-
-In circuit_1, we have 2 public inputs:
+**circuit_1 example**  
+In our circuit_1, we have 2 public inputs:
 
 - b = 4
 - c = 12
@@ -61,7 +75,7 @@ So we'll remove the first 2 values which should be:
 - 0x0000000000000000000000000000000000000000000000000000000000000004
 - 0x000000000000000000000000000000000000000000000000000000000000000c
 
-## main circuit
+### recursive circuit
 
 - Copy proof and VK to recurse/Prover.toml
 - Adapt the number of public inputs in the recurse circuit: `public_inputs: [Field; 2],`
@@ -78,28 +92,4 @@ nargo execute
 bb prove -v -b "./target/recurse.json" -w "./target/recurse.gz" -o ./proof --recursive
 bb write_vk -v -b "./target/recurse.json" -o ./proof --honk_recursion 1
 bb verify -k ./proof/vk -p ./proof/proof -i ./proof/public_inputs
-```
-
-## javascript
-
-In JS you can use the [prove.js](./prove.js) script.
-
-The @aztec/bb packages is missing a few options, so we need to adapt for now.
-
-### VK
-
-The verifying key is not generated properly for now, so it needs to be generated in advance with `bb` and imported in the script.  
-It's fixed for a circuit, so it doesn't change based on user inputs
-
-### Proof
-
-There's a function `generateProofForRecursiveAggregation` but it doesn't return the proof, only the proof formatted as fields so we can't verify it.  
-For that reason, I compute the fields myself with `proofToFields` and from the publicInputs returned by `generateProof`
-
-```js
-// const { execSync } = require("child_process");
-// execSync("nargo execute --package circuit_1");
-// execSync("nargo compile --package recurse");
-// execSync("bb prove -b ./circuit_1/target/circuit_1.json -w ./circuit_1/target/circuit_1.gz -o ./circuit_1/proof --recursive --honk_recursion 1 --output_format fields");
-// execSync("bb write_vk -b ./circuit_1/target/circuit_1.json -o ./circuit_1/proof --init_kzg_accumulator --honk_recursion 1 --output_format fields");
 ```

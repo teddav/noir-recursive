@@ -72,8 +72,10 @@ async function main() {
   console.timeEnd("prove recursive 1");
   console.log("Parent 1 public inputs:", proof_recursive1.publicInputs);
 
+  console.time("verify recursive 1");
   const verified_recursive1 = await backend_recursive1.verifyProof(proof_recursive1);
   assert(verified_recursive1);
+  console.timeEnd("verify recursive 1");
 
   // Recursive circuit 2
   const {
@@ -91,8 +93,10 @@ async function main() {
   console.timeEnd("prove recursive 2");
   console.log("Parent 2 public inputs:", proof_recursive2.publicInputs);
 
-  const verified2 = await backend_recursive2.verifyProof(proof_recursive2);
-  assert(verified2);
+  console.time("verify recursive 2");
+  const verified_recursive2 = await backend_recursive2.verifyProof(proof_recursive2);
+  assert(verified_recursive2);
+  console.timeEnd("verify recursive 2");
 }
 
 main();
